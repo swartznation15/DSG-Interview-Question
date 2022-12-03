@@ -31,7 +31,7 @@ def sendEmail(newUser_emailAddress, firstName, lastName, password, userName):
         smtp.send_message(msg)
 
 
-def sendErrorEmail():
+def sendErrorEmail(errorMessage):
     #establish the senders email credentials
     sendersEmail = "xxxxxxxx@gmail.com"
     sendersPassword = "xxxxxxx"
@@ -42,7 +42,7 @@ def sendErrorEmail():
     # Send the email to our DB admins so they are aware of the fact that the user wasnt created
     msg['To'] = 'db_admins@somecompany.co'
     messageText = "User " + firstName + " " + lastName + "'s' "+ "snowflake account was not created."
-    msg.set_content(messageText)
+    msg.set_content(messageText + '\n' + errorMessage)
     #using the smtplib library we send out the email
     with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
         smtp.login(sendersEmail, sendersPassword)
@@ -89,9 +89,9 @@ cs = ctx.cursor()
 try:
     # call our api call function
     listOfUsers = createUsers()
-except:
+except e:
     # call our failure function if necessary
-    sendErrorEmail()
+    sendErrorEmail(e)
     #break out of everything so we dont unintentinally send the DB team emeails twice
     exit()
 
@@ -104,9 +104,9 @@ try:
         cs.execute(sqlStat)
         #call our send email function so our user is notified
         sendEmail(user[4],user[0],user[1], user[3], user[2])
-except:
+except e:
     #send our db team notification of the failure
-    sendErrorEmail()
+    sendErrorEmail(e)
     exit()
 #close our snowflake connections for the cursor and the connector
 cs.close()
